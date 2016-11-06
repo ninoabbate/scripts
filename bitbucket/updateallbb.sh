@@ -30,5 +30,5 @@ for i in "${bbrepos[@]}"
     echo 
     echo Now updating "$repository" repo
     echo
-    (cd "$repository" && git pull origin master)
+    (cd "$repository" && git pull)
   done
