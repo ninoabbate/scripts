@@ -79,12 +79,16 @@ function createsnapshot {
 function removeolder {
 	CURRENTSNAPS="$(aws ec2 describe-snapshots --region "$REG" --profile "$PROFILE" --filters  Name=volume-id,Values="$VOLUMEID" --output text --query 'Snapshots[].SnapshotId')"
 	SNAPS=($CURRENTSNAPS)
-	# only for OSX date
-	#TWOWEEKSAGO=$(echo `date -v-2w +%F`)
-	TWOWEEKSAGO=$(date -d ""$NOW" -14 days" +%Y-%m-%d)
+	OS=$(uname -a | awk '{print $1}')
+	if [ $OS = "Darwin" ]; then
+		# If the operating system where this script runs is OSX
+		TWOWEEKSAGO=$(date -v-2w +%F)
+	else
+		TWOWEEKSAGO=$(date -d ""$NOW" -14 days" +%Y-%m-%d)
+	fi
 	for snap in "${SNAPS[@]}"; do
 		STARTDATE="$(aws ec2 describe-snapshots --region "$REG" --profile "$PROFILE" --owner-ids self --snapshot-ids "$snap" --output text --query 'Snapshots[].StartTime')"
- 		STARTDATE=$(date -d "$STARTDATE" +%Y-%m-%d)
+ 		STARTDATE="$(echo $STARTDATE | cut -f1 -d"T")"
  		SNAPVOLUME="$(aws ec2 describe-snapshots --region "$REG" --profile "$PROFILE" --owner-ids self --snapshot-ids "$snap" --output text --query 'Snapshots[].VolumeId')"
  		if [ "$STARTDATE" \< "$TWOWEEKSAGO" ]; then
  			# verify if there are more than 2 snapshot of a volume
